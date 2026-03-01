@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Manu Barber Pro - v70</title>
+    <title>Manu Barber Pro - v74</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,8 +16,8 @@
     
     <style>
         :root {
-            --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000;
-            --blue: #007aff; --green: #34c759; --red: #ff3b30; --gold: #af9500;
+            --ios-bg: #f2f2f7; --ios-card: #ffffff; --blue: #007aff; 
+            --green: #34c759; --red: #ff3b30; --gold: #af9500;
             --gray: #8e8e93; --wa: #25d366;
         }
 
@@ -30,7 +30,7 @@
         .main-wrapper { height: 100vh; overflow-y: auto; padding: 15px; padding-top: env(safe-area-inset-top); display: none; -webkit-overflow-scrolling: touch; }
         .container { max-width: 480px; margin: 0 auto; padding-bottom: 120px; }
 
-        #lock-screen { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+        #lock-screen { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
         
         .card { background: var(--ios-card); border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
         .rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
@@ -54,23 +54,25 @@
         .item-card.pending { border-left-color: var(--red); }
         .item-card.paid { border-left-color: var(--green); }
         
-        .report-box { background: white; border-radius: 22px; padding: 18px; margin-top: 15px; border: 1px solid #e5e5ea; font-size: 0.85rem; }
-        .t-resumen { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .t-resumen td { padding: 8px 4px; border-bottom: 1px solid #f2f2f7; }
-        .t-resumen tr.total-row td { border-top: 2px solid #e5e5ea; font-weight: 800; padding-top: 10px; }
-
         #custom-alert { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; padding: 20px; }
         .alert-content { background: white; border-radius: 25px; padding: 25px; width: 100%; max-width: 320px; text-align: center; }
+
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8rem; }
+        .report-table th, .report-table td { padding: 6px; border-bottom: 1px solid #f2f2f7; }
+        .row-cat { background: #f8f8f8; font-weight: 800; color: var(--blue); text-align: center; }
+        .row-total-sub { font-weight: 800; background: #fafafa; }
+        .row-neto { background: var(--gold); color: white; font-weight: 900; }
     </style>
 </head>
 <body>
 
 <div id="lock-screen">
-    <div style="background: var(--blue); color:white; width: 70px; height: 70px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;"><i data-lucide="scissors" size="35"></i></div>
-    <h2 style="margin:0 0 20px 0;">Manu Barber Pro</h2>
-    <input type="password" id="pass" placeholder="Clave Maestra" style="background:#f2f2f7; padding:18px; border-radius:15px; width:100%; text-align:center; margin-bottom:15px; border:none; font-size:1.2rem;">
-    <button class="btn-blue" onclick="validar()">ENTRAR</button>
-    <button onclick="window.open('https://wa.me/584247824404?text=Clave%20Remota')" style="margin-top:25px; border:none; background:none; color:var(--blue); font-weight:700;">SOLICITAR ACCESO REMOTO</button>
+    <div style="background: var(--blue); color:white; width: 70px; height: 70px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;"><i data-lucide="lock" size="35"></i></div>
+    <h2 style="margin:0;">Manu Barber Pro</h2>
+    <div id="dev-id-box" style="margin: 15px 0; font-family:monospace; color:var(--blue); font-weight:800;">ID: Cargando...</div>
+    <input type="password" id="pass" placeholder="Clave de Acceso" style="background:#f2f2f7; padding:18px; border-radius:15px; width:100%; text-align:center; margin-bottom:15px; border:none; font-size:1.1rem;">
+    <button class="btn-blue" onclick="validarAcceso()">AUTORIZAR</button>
+    <button onclick="enviarToken()" style="margin-top:20px; border:none; background:none; color:var(--blue); font-weight:700;">SOLICITAR CLAVE A MANU</button>
 </div>
 
 <div id="custom-alert">
@@ -88,7 +90,6 @@
 
 <div class="main-wrapper" id="app">
     <div class="container">
-        
         <div class="rate-grid">
             <div class="rate-box"><small>EURO €</small><input type="number" id="rate-eur" value="43.50" oninput="actualizarTodo()"><button class="sync-btn" onclick="wsTasa('EUR')"><i data-lucide="refresh-cw" size="12"></i></button></div>
             <div class="rate-box"><small>DÓLAR $</small><input type="number" id="rate-usd" value="40.00" oninput="actualizarTodo()"><button class="sync-btn" onclick="wsTasa('USD')"><i data-lucide="refresh-cw" size="12"></i></button></div>
@@ -96,11 +97,11 @@
 
         <div class="card" style="text-align: center;">
             <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <div style="text-align:left;"><small>INGRESOS (BS)</small><div class="dash-val" id="d-ingresos" style="color:var(--green)">0.00 Bs</div></div>
-                <div style="text-align:right;"><small>GASTOS (BS)</small><div class="dash-val" id="d-gastos" style="color:var(--red)">0.00 Bs</div></div>
+                <div style="text-align:left;"><small>INGRESOS</small><div id="d-ingresos" style="color:var(--green); font-weight:800;">0.00 Bs</div></div>
+                <div style="text-align:right;"><small>GASTOS</small><div id="d-gastos" style="color:var(--red); font-weight:800;">0.00 Bs</div></div>
             </div>
-            <small style="color:var(--gold); font-weight:800;">TOTAL NETO HOY</small>
-            <div class="dash-val" id="d-neto" style="color:var(--gold); font-size:1.8rem;">0.00 Bs</div>
+            <small style="color:var(--gold); font-weight:800;">NETO CAJA</small>
+            <div id="d-neto" style="color:var(--gold); font-size:1.8rem; font-weight:900;">0.00 Bs</div>
         </div>
 
         <div class="tabs">
@@ -110,7 +111,7 @@
         </div>
 
         <div id="sec-serv" class="section active">
-            <div class="input-row"><i data-lucide="user" size="18" color="#8e8e93"></i><input type="text" id="s-nom" placeholder="Cliente"></div>
+            <div class="input-row"><i data-lucide="user" size="18" color="#8e8e93"></i><input type="text" id="s-nom" placeholder="Nombre del Cliente"></div>
             <div style="display:flex; gap:10px;">
                 <div class="input-row" style="flex:2;"><i data-lucide="scissors" size="18" color="#8e8e93"></i><input type="number" id="s-pre" placeholder="Precio" oninput="calcPrev()"></div>
                 <select id="s-cur" style="flex:1; background:white; border-radius:14px; border:1px solid #ccc;" onchange="calcPrev()">
@@ -119,12 +120,10 @@
             </div>
             <div id="s-prev" style="color:var(--gold); font-weight:800; font-size:0.8rem; margin: -5px 0 10px 10px;">➔ 0.00 Bs</div>
             <div class="input-row" style="border-color:var(--gold);"><i data-lucide="wallet" size="18" color="#af9500"></i><input type="number" id="s-abo" placeholder="Abono"><select id="s-acur" style="width:70px;"><option value="VES">Bs</option><option value="EUR">€</option><option value="USD">$</option></select></div>
-            
             <div style="display:flex; gap:10px; margin-bottom:15px;">
                 <button class="btn-blue" onclick="addServicio(false)" style="flex:2;">REGISTRAR</button>
                 <button class="btn-blue" onclick="addServicio(true)" style="flex:1; background:var(--green);">PAGADO</button>
             </div>
-
             <div style="display:flex; background:#e5e5ea; padding:4px; border-radius:12px; margin-bottom:15px;">
                 <button id="f-pend" class="tab active" onclick="setFiltro('pend')">DEUDORES</button>
                 <button id="f-paga" class="tab" onclick="setFiltro('paga')">PAGADOS</button>
@@ -133,48 +132,56 @@
         </div>
 
         <div id="sec-gast" class="section">
-            <div class="input-row"><i data-lucide="shopping-cart" size="18" color="#8e8e93"></i><input type="text" id="g-des" placeholder="Concepto"></div>
+            <div class="input-row"><i data-lucide="shopping-cart" size="18" color="#8e8e93"></i><input type="text" id="g-des" placeholder="Descripción del Gasto"></div>
             <div style="display:flex; gap:10px;">
                 <div class="input-row" style="flex:2;"><i data-lucide="banknote" size="18" color="#8e8e93"></i><input type="number" id="g-pre" placeholder="Monto"></div>
                 <select id="g-cur" style="flex:1; background:white; border-radius:14px; border:1px solid #ccc;">
                     <option value="VES">Bs</option><option value="EUR">€</option><option value="USD">$</option>
                 </select>
             </div>
-            <button class="btn-blue" onclick="addGasto()" style="background:#5856d6; margin-bottom:15px;">GUARDAR GASTO</button>
-            <div id="list-gast"></div>
+            <button class="btn-blue" onclick="addGasto()" style="background:#5856d6;">GUARDAR GASTO</button>
+            <div id="list-gast" style="margin-top:15px;"></div>
         </div>
 
         <div id="sec-hist" class="section">
-            <button class="btn-blue" onclick="cierreCaja()" style="background:var(--gold); margin-bottom:10px;">GENERAR CIERRE DIARIO</button>
-            <button class="btn-blue" onclick="deshacer()" style="background:var(--gray); font-size:0.75rem; margin-bottom:20px;">RESTAURAR CIERRE PREVIO</button>
+            <button class="btn-blue" onclick="cierreCaja()" style="background:var(--gold); margin-bottom:10px;">CERRAR CAJA Y GENERAR REPORTE</button>
+            <button class="btn-blue" onclick="deshacer()" style="background:var(--gray); font-size:0.75rem; margin-bottom:20px;">DESHACER ÚLTIMO CIERRE</button>
             <div id="list-hist"></div>
         </div>
-
     </div>
 </div>
 
 <script>
-    const KEY = "MANU2026";
+    // SEGURIDAD POR TOKEN
+    const devNum = (navigator.userAgent.length + new Date().getDate() + 7).toString();
+    const ID_COMPLETO = "BARBER-" + devNum;
+    document.getElementById('dev-id-box').innerText = "ID: " + ID_COMPLETO;
+    function enviarToken() { window.open(`https://wa.me/584247824404?text=Manu, clave para ID: ${ID_COMPLETO}`); }
+    function validarAcceso() {
+        if(document.getElementById('pass').value === "2026"+devNum) {
+            localStorage.setItem('manu_auth_v74', 'true');
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            actualizarTodo();
+        } else alert("Acceso denegado");
+    }
+    if(localStorage.getItem('manu_auth_v74') === 'true') {
+        document.getElementById('lock-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+    }
+
     let data = {
-        servs: JSON.parse(localStorage.getItem('m70_s')) || [],
-        gasts: JSON.parse(localStorage.getItem('m70_g')) || [],
-        hists: JSON.parse(localStorage.getItem('m70_h')) || [],
+        servs: JSON.parse(localStorage.getItem('m74_s')) || [],
+        gasts: JSON.parse(localStorage.getItem('m74_g')) || [],
+        hists: JSON.parse(localStorage.getItem('m74_h')) || [],
         filtro: 'pend'
     };
 
     function guardar() {
-        localStorage.setItem('m70_s', JSON.stringify(data.servs));
-        localStorage.setItem('m70_g', JSON.stringify(data.gasts));
-        localStorage.setItem('m70_h', JSON.stringify(data.hists));
+        localStorage.setItem('m74_s', JSON.stringify(data.servs));
+        localStorage.setItem('m74_g', JSON.stringify(data.gasts));
+        localStorage.setItem('m74_h', JSON.stringify(data.hists));
         actualizarTodo();
-    }
-
-    function validar() {
-        if(document.getElementById('pass').value.toUpperCase() === KEY) {
-            document.getElementById('lock-screen').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            actualizarTodo();
-        } else alert("Clave Incorrecta");
     }
 
     function irTab(t) {
@@ -185,12 +192,7 @@
         lucide.createIcons();
     }
 
-    function setFiltro(f) { 
-        data.filtro = f; 
-        document.getElementById('f-pend').classList.toggle('active', f==='pend');
-        document.getElementById('f-paga').classList.toggle('active', f==='paga');
-        actualizarTodo(); 
-    }
+    function setFiltro(f) { data.filtro = f; actualizarTodo(); }
 
     async function wsTasa(c) {
         try {
@@ -252,10 +254,10 @@
                 lS.innerHTML += `<div class="item-card ${esD?'pending':'paid'}">
                     <button style="position:absolute;right:10px;top:10px;border:none;background:none;color:#ccc;" onclick="borrar('s',${s.id})"><i data-lucide="trash-2" size="14"></i></button>
                     <strong>${s.n}</strong>: ${s.p}${s.c==='USD'?'$':(s.c==='EUR'?'€':'Bs')}
-                    <div style="font-size:0.75rem; color:gray;">Pagado: <b style="color:var(--green)">${pBsActual.toFixed(2)} Bs</b></div>
-                    ${esD ? `<div style="color:var(--red); font-weight:800; margin-top:8px;">PENDIENTE: ${dBsHoy} Bs</div>
+                    <div style="font-size:0.75rem;">Cobrado: <b style="color:var(--green)">${pBsActual.toFixed(2)} Bs</b></div>
+                    ${esD ? `<div style="color:var(--red); font-weight:800; margin-top:5px;">DEUDA: ${dBsHoy} Bs</div>
                         <div style="display:flex; gap:5px; margin-top:10px;">
-                            <button onclick="abonar(${s.id})" style="flex:1; background:#f2f2f7; border:none; padding:10px; border-radius:10px; font-weight:700;">Abonar</button>
+                            <button onclick="abonar(${s.id})" style="flex:1; background:#f2f2f7; border:none; padding:8px; border-radius:10px; font-weight:700;">Abonar</button>
                             <button onclick="cobrarWA('${s.n}', '${dBsHoy}')" style="background:var(--wa); border:none; width:45px; border-radius:10px; color:white;"><i data-lucide="message-circle" size="18"></i></button>
                             <button onclick="liquidar(${s.id})" style="flex:1; background:var(--green); color:white; border:none; border-radius:10px; font-weight:700;">Saldar</button>
                         </div>` : ''}
@@ -268,7 +270,7 @@
             tg += eq;
             lG.innerHTML += `<div class="item-card" style="border-left-color:#5856d6">
                 <button style="position:absolute;right:10px;top:10px;border:none;background:none;color:#ccc;" onclick="borrar('g',${g.id})"><i data-lucide="trash-2" size="14"></i></button>
-                <strong>${g.d}</strong><br><small>${g.p}${g.c} ➔ ${eq.toFixed(2)} Bs</small>
+                <strong>${g.d}</strong>: ${g.p}${g.c} ➔ ${eq.toFixed(2)} Bs
             </div>`;
         });
 
@@ -280,47 +282,64 @@
     }
 
     function cobrarWA(nombre, monto) {
-        const msj = `Hola ${nombre}, te escribo de Manu Barber Pro para recordarte que tienes un pendiente de ${monto} Bs. ¡Gracias!`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(msj)}`);
+        window.open(`https://wa.me/?text=Hola ${nombre}, te recordamos tu saldo de ${monto} Bs en Manu Barber Pro.`);
     }
 
     function cierreCaja() {
         if(data.servs.length===0 && data.gasts.length===0) return;
-        abrirAlert("¿Confirmar Cierre de Caja?", () => {
+        abrirAlert("¿Confirmar Cierre Diario?", () => {
             const f = new Date(), tu = parseFloat(document.getElementById('rate-usd').value), te = parseFloat(document.getElementById('rate-eur').value);
-            let sBs = 0, gBs = 0, rows = "", wa = `💈 *REPORTE CIERRE - MANU BARBER*\n📅 ${f.toLocaleDateString()} | ⏰ ${f.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}\n💵 Tasa: $${tu} / €${te}\n--------------------------\n`;
+            let sTotal = 0, gTotal = 0, dTotal = 0, rows = "";
             let backup = {s: JSON.parse(JSON.stringify(data.servs)), g: JSON.parse(JSON.stringify(data.gasts))};
 
-            data.servs.forEach(s => {
-                let pBsC = 0, pUSD = 0;
-                s.pagos.forEach(pg => {
-                    pUSD += pg.c==='VES' ? pg.v/pg.tu : (pg.c==='EUR' ? pg.v*(pg.te/pg.tu) : pg.v);
-                    if(!pg.esc) {
-                        let eq = pg.c==='VES' ? pg.v : (pg.c==='USD' ? pg.v*tu : pg.v*te);
-                        pBsC += eq; pg.esc = true;
-                    }
-                });
-                if(pBsC > 0) {
-                    rows += `<tr><td>${s.n}</td><td style="color:var(--blue); text-align:right;">+${pBsC.toFixed(2)}</td></tr>`;
-                    sBs += pBsC; wa += `✅ ${s.n}: +${pBsC.toFixed(2)} Bs\n`;
-                }
-                let dUSD = s.mUSD - pUSD;
-                if(dUSD > 0.01) { rows += `<tr><td style="color:gray">${s.n} (DEUDA)</td><td style="color:var(--red); text-align:right;">${(dUSD*tu).toFixed(2)}</td></tr>`; }
-            });
+            // WA TEXT INIT
+            let wa = `💈 *MANU BARBER PRO - CIERRE*\n📅 ${f.toLocaleDateString()} ⏰ ${f.toLocaleTimeString()}\n`;
+            wa += `--------------------------------\n📈 *TASAS:* $: ${tu} | €: ${te}\n--------------------------------\n\n`;
 
+            // INGRESOS
+            rows += `<tr class="row-cat"><td colspan="2">INGRESOS (COBRADOS)</td></tr>`;
+            wa += `✅ *SERVICIOS COBRADOS:*\n`;
+            data.servs.forEach(s => {
+                let cobrado = 0;
+                s.pagos.forEach(pg => { if(!pg.esc) { cobrado += (pg.c==='VES'?pg.v:(pg.c==='USD'?pg.v*tu:pg.v*te)); pg.esc = true; } });
+                if(cobrado > 0) {
+                    rows += `<tr><td>${s.n}</td><td style="color:var(--green); text-align:right;">+${cobrado.toFixed(2)}</td></tr>`;
+                    wa += `• ${s.n}: +${cobrado.toFixed(2)} Bs\n`;
+                    sTotal += cobrado;
+                }
+            });
+            rows += `<tr class="row-total-sub"><td>TOTAL INGRESOS</td><td style="text-align:right;">${sTotal.toFixed(2)} Bs</td></tr>`;
+
+            // GASTOS
+            rows += `<tr class="row-cat"><td colspan="2">GASTOS</td></tr>`;
+            wa += `\n💸 *GASTOS DETALLADOS:*\n`;
             data.gasts.forEach(g => {
                 let eq = g.c==='VES' ? g.p : (g.c==='USD' ? g.p*tu : g.p*te);
-                gBs += eq; rows += `<tr><td>${g.d}</td><td style="color:var(--red); text-align:right;">-${eq.toFixed(2)}</td></tr>`;
-                wa += `💸 ${g.d}: -${eq.toFixed(2)} Bs\n`;
+                gTotal += eq;
+                rows += `<tr><td>${g.d}</td><td style="color:var(--red); text-align:right;">-${eq.toFixed(2)}</td></tr>`;
+                wa += `• ${g.d}: -${eq.toFixed(2)} Bs\n`;
+            });
+            rows += `<tr class="row-total-sub"><td>TOTAL GASTOS</td><td style="text-align:right;">-${gTotal.toFixed(2)} Bs</td></tr>`;
+
+            // DEUDORES
+            rows += `<tr class="row-cat"><td colspan="2">PENDIENTES (DEUDA)</td></tr>`;
+            wa += `\n🔴 *PENDIENTES POR COBRAR:*\n`;
+            data.servs.forEach(s => {
+                let pU = 0; s.pagos.forEach(pg => pU += pg.c==='VES' ? pg.v/pg.tu : (pg.c==='EUR' ? pg.v*(pg.te/pg.tu) : pg.v));
+                let deud = (s.mUSD - pU) * tu;
+                if(deud > 0.01) {
+                    rows += `<tr><td style="color:var(--red)">${s.n}</td><td style="color:var(--red); text-align:right;">${deud.toFixed(2)} Bs</td></tr>`;
+                    wa += `• ${s.n}: ${deud.toFixed(2)} Bs\n`;
+                    dTotal += deud;
+                }
             });
 
-            rows += `<tr class="total-row"><td>TOTAL COBRADO</td><td style="color:var(--green); text-align:right;">${sBs.toFixed(2)}</td></tr>`;
-            rows += `<tr><td>TOTAL GASTOS</td><td style="color:var(--red); text-align:right;">${gBs.toFixed(2)}</td></tr>`;
-            rows += `<tr><td style="font-size:1.1rem; color:var(--gold)">NETO EN CAJA</td><td style="font-size:1.1rem; color:var(--gold); text-align:right;">${(sBs-gBs).toFixed(2)} Bs</td></tr>`;
+            // FINAL
+            let neto = sTotal - gTotal;
+            rows += `<tr class="row-neto"><td>NETO FINAL CAJA</td><td style="text-align:right;">${neto.toFixed(2)} Bs</td></tr>`;
+            wa += `\n--------------------------------\n💰 *TOTAL INGRESOS:* ${sTotal.toFixed(2)} Bs\n📉 *TOTAL GASTOS:* ${gTotal.toFixed(2)} Bs\n💎 *NETO CAJA:* ${neto.toFixed(2)} Bs\n--------------------------------\n`;
 
-            wa += `\n--------------------------\n💰 TOTAL COBRADO: ${sBs.toFixed(2)} Bs\n💸 TOTAL GASTOS: ${gBs.toFixed(2)} Bs\n💎 *NETO FINAL: ${(sBs-gBs).toFixed(2)} Bs*`;
-
-            data.hists.unshift({id:Date.now(), fecha:f.toLocaleDateString()+' '+f.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), total:sBs-gBs, html:rows, backup, wa});
+            data.hists.unshift({id:Date.now(), fecha:f.toLocaleString(), html:rows, backup, wa});
             data.servs = data.servs.filter(s => {
                 let pU = 0; s.pagos.forEach(pg => pU += pg.c==='VES' ? pg.v/pg.tu : (pg.c==='EUR' ? pg.v*(pg.te/pg.tu) : pg.v));
                 return (s.mUSD - pU) > 0.01;
@@ -333,23 +352,32 @@
     function mostrarHists() {
         const lH = document.getElementById('list-hist'); lH.innerHTML = '';
         data.hists.forEach(h => {
-            lH.innerHTML += `<div class="report-box" id="rep-${h.id}">
+            lH.innerHTML += `<div class="card" id="rep-${h.id}">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <b style="color:var(--blue)">${h.fecha}</b>
-                    <button onclick="window.open('https://wa.me/?text=${encodeURIComponent(h.wa)}')" style="background:var(--wa); color:white; border:none; padding:6px 14px; border-radius:12px; font-weight:700; display:flex; align-items:center; gap:5px;"><i data-lucide="share" size="14"></i> WhatsApp</button>
+                    <button onclick="window.open('https://wa.me/?text=${encodeURIComponent(h.wa)}')" style="background:var(--wa); color:white; border:none; padding:8px 12px; border-radius:10px;"><i data-lucide="share-2" size="16"></i></button>
                 </div>
-                <table class="t-resumen">${h.html}</table>
-                <div style="display:flex; gap:8px; margin-top:15px;">
-                    <button onclick="exportPDF(${h.id})" style="flex:1; background:#c43e3e; color:white; border:none; padding:10px; border-radius:10px; font-size:0.75rem;">PDF</button>
-                    <button onclick="exportEX(${h.id})" style="flex:1; background:#1d6f42; color:white; border:none; padding:10px; border-radius:10px; font-size:0.75rem;">EXCEL</button>
+                <table class="report-table">${h.html}</table>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button onclick="exportPDF(${h.id})" style="flex:1; background:#c43e3e; color:white; border:none; padding:10px; border-radius:10px; font-size:11px; font-weight:800;">PDF</button>
+                    <button onclick="exportEX(${h.id})" style="flex:1; background:#1d6f42; color:white; border:none; padding:10px; border-radius:10px; font-size:11px; font-weight:800;">EXCEL</button>
                 </div>
             </div>`;
         });
+        lucide.createIcons();
     }
 
-    function deshacer() {
-        if(data.hists.length===0) return;
-        abrirAlert("¿Restaurar datos?", () => { const b = data.hists[0].backup; data.servs = b.s; data.gasts = b.g; data.hists.shift(); guardar(); });
+    function exportPDF(id) {
+        const el = document.getElementById('rep-'+id);
+        const opt = { margin: 0.5, filename: `Cierre_${id}.pdf`, image: { type:'jpeg', quality:0.98 }, html2canvas:{ scale:2 }, jsPDF:{ unit:'in', format:'letter', orientation:'portrait' } };
+        html2pdf().set(opt).from(el).save();
+    }
+
+    function exportEX(id) {
+        const ws = XLSX.utils.table_to_sheet(document.querySelector(`#rep-${id} table`));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Cierre");
+        XLSX.writeFile(wb, `Cierre_Manu_${id}.xlsx`);
     }
 
     function abonar(id) {
@@ -366,10 +394,6 @@
         if(f > 0.01) { s.pagos.push({v:parseFloat((f*tu/tu).toFixed(4)), c:'USD', tu, te, esc:false}); guardar(); }
     }
 
-    function exportPDF(id) { html2pdf().from(document.getElementById('rep-'+id)).save(); }
-    function exportEX(id) { const ws = XLSX.utils.table_to_sheet(document.querySelector(`#rep-${id} table`)); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Cierre"); XLSX.writeFile(wb, `Cierre_${id}.xlsx`); }
-    function borrar(t,id) { abrirAlert("¿Eliminar?", () => { if(t==='s') data.servs=data.servs.filter(x=>x.id!==id); else data.gasts=data.gasts.filter(x=>x.id!==id); guardar(); }); }
-    
     function abrirAlert(m, ok, inp=false) {
         document.getElementById('alert-txt').innerText = m;
         document.getElementById('alert-inp-wrap').style.display = inp?'block':'none';
@@ -377,13 +401,11 @@
         document.getElementById('alert-ok').onclick = () => { ok(document.getElementById('alert-v').value, document.getElementById('alert-c').value); cerrarAlert(); };
     }
     function cerrarAlert() { document.getElementById('custom-alert').style.display = 'none'; }
-    
-    // REGISTRO DEL SERVICE WORKER (PARA INSTALAR EN ANDROID)
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(() => console.log("Service Worker Registrado"));
-    }
+    function borrar(t,id) { abrirAlert("¿Eliminar?", () => { if(t==='s') data.servs=data.servs.filter(x=>x.id!==id); else data.gasts=data.gasts.filter(x=>x.id!==id); guardar(); }); }
+    function deshacer() { if(data.hists.length>0) { const b = data.hists[0].backup; data.servs = b.s; data.gasts = b.g; data.hists.shift(); guardar(); } }
 
-    window.onload = () => { lucide.createIcons(); };
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+    window.onload = () => lucide.createIcons();
 </script>
 </body>
 </html>
