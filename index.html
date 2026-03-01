@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Manu Barber Pro - v69</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1465/1465133.png">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000;
+            --blue: #007aff; --green: #34c759; --red: #ff3b30; --gold: #af9500;
+            --gray: #8e8e93; --wa: #25d366;
+        }
+
+        html, body { 
+            margin: 0; height: 100%; overflow: hidden; overscroll-behavior-y: contain; 
+            font-family: -apple-system, system-ui, sans-serif; background: var(--ios-bg);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        .main-wrapper { height: 100vh; overflow-y: auto; padding: 15px; padding-top: env(safe-area-inset-top); display: none; -webkit-overflow-scrolling: touch; }
+        .container { max-width: 480px; margin: 0 auto; padding-bottom: 120px; }
+
+        #lock-screen { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+        
+        .card { background: var(--ios-card); border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .rate-box { background: white; border-radius: 18px; padding: 12px; display: flex; flex-direction: column; align-items: center; position: relative; border: 1px solid #e5e5ea; }
+        .rate-box input { border: none; font-size: 1.1rem; font-weight: 800; width: 100%; text-align: center; outline: none; color: var(--blue); }
+        .sync-btn { position: absolute; top: 8px; right: 8px; background: #f2f2f7; border: none; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; color: var(--blue); }
+
+        .tabs { display: flex; background: #e5e5ea; padding: 3px; border-radius: 14px; margin-bottom: 15px; }
+        .tab { flex: 1; padding: 10px; text-align: center; border-radius: 11px; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: #636366; }
+        .tab.active { background: white; color: var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .input-row { background: white; border-radius: 14px; border: 1px solid #d1d1d6; padding: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        input, select { border: none; width: 100%; outline: none; font-size: 16px; background: transparent; }
+        
+        .btn-blue { background: var(--blue); color: white; border: none; padding: 16px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        
+        .item-card { background: white; padding: 15px; border-radius: 18px; margin-bottom: 10px; border-left: 6px solid var(--gray); position: relative; }
+        .item-card.pending { border-left-color: var(--red); }
+        .item-card.paid { border-left-color: var(--green); }
+        
+        .report-box { background: white; border-radius: 22px; padding: 18px; margin-top: 15px; border: 1px solid #e5e5ea; font-size: 0.85rem; }
+        .t-resumen { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .t-resumen td { padding: 8px 4px; border-bottom: 1px solid #f2f2f7; }
+        .t-resumen tr.total-row td { border-top: 2px solid #e5e5ea; font-weight: 800; padding-top: 10px; }
+
+        #custom-alert { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; padding: 20px; }
+        .alert-content { background: white; border-radius: 25px; padding: 25px; width: 100%; max-width: 320px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="lock-screen">
+    <div style="background: var(--blue); color:white; width: 70px; height: 70px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;"><i data-lucide="scissors" size="35"></i></div>
+    <h2 style="margin:0 0 20px 0;">Manu Barber Pro</h2>
+    <input type="password" id="pass" placeholder="Clave Maestra" style="background:#f2f2f7; padding:18px; border-radius:15px; width:100%; text-align:center; margin-bottom:15px; border:none; font-size:1.2rem;">
+    <button class="btn-blue" onclick="validar()">ENTRAR</button>
+    <button onclick="window.open('https://wa.me/584247824402?text=Clave%20Remota')" style="margin-top:25px; border:none; background:none; color:var(--blue); font-weight:700;">SOLICITAR ACCESO REMOTO</button>
+</div>
+
+<div id="custom-alert">
+    <div class="alert-content">
+        <p id="alert-txt" style="font-weight:700; margin-bottom:20px;"></p>
+        <div id="alert-inp-wrap" style="display:none; margin-bottom:15px;">
+            <div class="input-row"><input type="number" id="alert-v" placeholder="Monto"><select id="alert-c" style="width:70px;"><option value="VES">Bs</option><option value="EUR">€</option><option value="USD">$</option></select></div>
+        </div>
+        <div style="display:flex; justify-content: space-evenly;">
+            <button onclick="cerrarAlert()" style="border:none; background:none; color:var(--blue); font-size:16px;">Cancelar</button>
+            <button id="alert-ok" style="border:none; background:none; color:var(--red); font-weight:700; font-size:16px;">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<div class="main-wrapper" id="app">
+    <div class="container">
+        
+        <div class="rate-grid">
+            <div class="rate-box"><small>EURO €</small><input type="number" id="rate-eur" value="43.50" oninput="actualizarTodo()"><button class="sync-btn" onclick="wsTasa('EUR')"><i data-lucide="refresh-cw" size="12"></i></button></div>
+            <div class="rate-box"><small>DÓLAR $</small><input type="number" id="rate-usd" value="40.00" oninput="actualizarTodo()"><button class="sync-btn" onclick="wsTasa('USD')"><i data-lucide="refresh-cw" size="12"></i></button></div>
+        </div>
+
+        <div class="card" style="text-align: center;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <div style="text-align:left;"><small>INGRESOS (BS)</small><div class="dash-val" id="d-ingresos" style="color:var(--green)">0.00 Bs</div></div>
+                <div style="text-align:right;"><small>GASTOS (BS)</small><div class="dash-val" id="d-gastos" style="color:var(--red)">0.00 Bs</div></div>
+            </div>
+            <small style="color:var(--gold); font-weight:800;">TOTAL NETO HOY</small>
+            <div class="dash-val" id="d-neto" style="color:var(--gold); font-size:1.8rem;">0.00 Bs</div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" id="t-serv" onclick="irTab('serv')">Servicios</div>
+            <div class="tab" id="t-gast" onclick="irTab('gast')">Gastos</div>
+            <div class="tab" id="t-hist" onclick="irTab('hist')">Reportes</div>
+        </div>
+
+        <div id="sec-serv" class="section active">
+            <div class="input-row"><i data-lucide="user" size="18" color="#8e8e93"></i><input type="text" id="s-nom" placeholder="Cliente"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="input-row" style="flex:2;"><i data-lucide="scissors" size="18" color="#8e8e93"></i><input type="number" id="s-pre" placeholder="Precio" oninput="calcPrev()"></div>
+                <select id="s-cur" style="flex:1; background:white; border-radius:14px; border:1px solid #ccc;" onchange="calcPrev()">
+                    <option value="EUR">€ EUR</option><option value="USD">$ USD</option><option value="VES">Bs VES</option>
+                </select>
+            </div>
+            <div id="s-prev" style="color:var(--gold); font-weight:800; font-size:0.8rem; margin: -5px 0 10px 10px;">➔ 0.00 Bs</div>
+            <div class="input-row" style="border-color:var(--gold);"><i data-lucide="wallet" size="18" color="#af9500"></i><input type="number" id="s-abo" placeholder="Abono"><select id="s-acur" style="width:70px;"><option value="VES">Bs</option><option value="EUR">€</option><option value="USD">$</option></select></div>
+            
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="btn-blue" onclick="addServicio(false)" style="flex:2;">REGISTRAR</button>
+                <button class="btn-blue" onclick="addServicio(true)" style="flex:1; background:var(--green);">PAGADO</button>
+            </div>
+
+            <div style="display:flex; background:#e5e5ea; padding:4px; border-radius:12px; margin-bottom:15px;">
+                <button id="f-pend" class="tab active" onclick="setFiltro('pend')">DEUDORES</button>
+                <button id="f-paga" class="tab" onclick="setFiltro('paga')">PAGADOS</button>
+            </div>
+            <div id="list-serv"></div>
+        </div>
+
+        <div id="sec-gast" class="section">
+            <div class="input-row"><i data-lucide="shopping-cart" size="18" color="#8e8e93"></i><input type="text" id="g-des" placeholder="Concepto"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="input-row" style="flex:2;"><i data-lucide="banknote" size="18" color="#8e8e93"></i><input type="number" id="g-pre" placeholder="Monto"></div>
+                <select id="g-cur" style="flex:1; background:white; border-radius:14px; border:1px solid #ccc;">
+                    <option value="VES">Bs</option><option value="EUR">€</option><option value="USD">$</option>
+                </select>
+            </div>
+            <button class="btn-blue" onclick="addGasto()" style="background:#5856d6; margin-bottom:15px;">GUARDAR GASTO</button>
+            <div id="list-gast"></div>
+        </div>
+
+        <div id="sec-hist" class="section">
+            <button class="btn-blue" onclick="cierreCaja()" style="background:var(--gold); margin-bottom:10px;">GENERAR CIERRE DIARIO</button>
+            <button class="btn-blue" onclick="deshacer()" style="background:var(--gray); font-size:0.75rem; margin-bottom:20px;">RESTAURAR CIERRE PREVIO</button>
+            <div id="list-hist"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const KEY = "MANU2026";
+    let data = {
+        servs: JSON.parse(localStorage.getItem('m69_s')) || [],
+        gasts: JSON.parse(localStorage.getItem('m69_g')) || [],
+        hists: JSON.parse(localStorage.getItem('m69_h')) || [],
+        filtro: 'pend'
+    };
+
+    function guardar() {
+        localStorage.setItem('m69_s', JSON.stringify(data.servs));
+        localStorage.setItem('m69_g', JSON.stringify(data.gasts));
+        localStorage.setItem('m69_h', JSON.stringify(data.hists));
+        actualizarTodo();
+    }
+
+    function validar() {
+        if(document.getElementById('pass').value.toUpperCase() === KEY) {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            actualizarTodo();
+        } else alert("Clave Incorrecta");
+    }
+
+    function irTab(t) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(tb => tb.classList.remove('active'));
+        document.getElementById('sec-'+t).classList.add('active');
+        document.getElementById('t-'+t).classList.add('active');
+        lucide.createIcons();
+    }
+
+    function setFiltro(f) { 
+        data.filtro = f; 
+        document.getElementById('f-pend').classList.toggle('active', f==='pend');
+        document.getElementById('f-paga').classList.toggle('active', f==='paga');
+        actualizarTodo(); 
+    }
+
+    async function wsTasa(c) {
+        try {
+            const r = await fetch('https://open.er-api.com/v6/latest/USD');
+            const d = await r.json();
+            if(c==='EUR') document.getElementById('rate-eur').value = (d.rates.VES / d.rates.EUR).toFixed(2);
+            else document.getElementById('rate-usd').value = d.rates.VES.toFixed(2);
+            actualizarTodo();
+        } catch(e) {}
+    }
+
+    function calcPrev() {
+        const p = parseFloat(document.getElementById('s-pre').value) || 0;
+        const c = document.getElementById('s-cur').value;
+        const tu = parseFloat(document.getElementById('rate-usd').value), te = parseFloat(document.getElementById('rate-eur').value);
+        let b = c==='VES' ? p : (c==='EUR' ? p*te : p*tu);
+        document.getElementById('s-prev').innerText = `➔ ${b.toFixed(2)} Bs`;
+    }
+
+    function addServicio(todo) {
+        const n = document.getElementById('s-nom').value, p = parseFloat(document.getElementById('s-pre').value), c = document.getElementById('s-cur').value;
+        const tu = parseFloat(document.getElementById('rate-usd').value), te = parseFloat(document.getElementById('rate-eur').value);
+        if(!n || isNaN(p)) return;
+        let mUSD = c==='EUR' ? p*(te/tu) : (c==='VES' ? p/tu : p);
+        let pagos = [];
+        if(todo) pagos.push({v:p, c, tu, te, esc:false});
+        else {
+            const av = parseFloat(document.getElementById('s-abo').value), ac = document.getElementById('s-acur').value;
+            if(av > 0) pagos.push({v:av, c:ac, tu, te, esc:false});
+        }
+        data.servs.unshift({id:Date.now(), n, p, c, mUSD, pagos});
+        document.getElementById('s-nom').value=''; document.getElementById('s-pre').value=''; document.getElementById('s-abo').value='';
+        guardar();
+    }
+
+    function addGasto() {
+        const d = document.getElementById('g-des').value, p = parseFloat(document.getElementById('g-pre').value), c = document.getElementById('g-cur').value;
+        if(!d || isNaN(p)) return;
+        data.gasts.unshift({id:Date.now(), d, p, c, tu:parseFloat(document.getElementById('rate-usd').value), te:parseFloat(document.getElementById('rate-eur').value)});
+        document.getElementById('g-des').value=''; document.getElementById('g-pre').value='';
+        guardar();
+    }
+
+    function actualizarTodo() {
+        const tu = parseFloat(document.getElementById('rate-usd').value), te = parseFloat(document.getElementById('rate-eur').value);
+        let ti = 0, tg = 0;
+        const lS = document.getElementById('list-serv'); lS.innerHTML = '';
+        const lG = document.getElementById('list-gast'); lG.innerHTML = '';
+
+        data.servs.forEach(s => {
+            let pUSD = 0, pBsActual = 0;
+            s.pagos.forEach(pg => {
+                pUSD += pg.c==='VES' ? pg.v/pg.tu : (pg.c==='EUR' ? pg.v*(pg.te/pg.tu) : pg.v);
+                let eq = pg.c==='VES' ? pg.v : (pg.c==='USD' ? pg.v*tu : pg.v*te);
+                pBsActual += eq; if(!pg.esc) ti += eq;
+            });
+            let dUSD = s.mUSD - pUSD, esD = dUSD > 0.01, dBsHoy = (dUSD * tu).toFixed(2);
+            if((data.filtro==='pend' && esD) || (data.filtro==='paga' && !esD)) {
+                lS.innerHTML += `<div class="item-card ${esD?'pending':'paid'}">
+                    <button style="position:absolute;right:10px;top:10px;border:none;background:none;color:#ccc;" onclick="borrar('s',${s.id})"><i data-lucide="trash-2" size="14"></i></button>
+                    <strong>${s.n}</strong>: ${s.p}${s.c==='USD'?'$':(s.c==='EUR'?'€':'Bs')}
+                    <div style="font-size:0.75rem; color:gray;">Pagado: <b style="color:var(--green)">${pBsActual.toFixed(2)} Bs</b></div>
+                    ${esD ? `<div style="color:var(--red); font-weight:800; margin-top:8px;">PENDIENTE: ${dBsHoy} Bs</div>
+                        <div style="display:flex; gap:5px; margin-top:10px;">
+                            <button onclick="abonar(${s.id})" style="flex:1; background:#f2f2f7; border:none; padding:10px; border-radius:10px; font-weight:700;">Abonar</button>
+                            <button onclick="cobrarWA('${s.n}', '${dBsHoy}')" style="background:var(--wa); border:none; width:45px; border-radius:10px; color:white;"><i data-lucide="message-circle" size="18"></i></button>
+                            <button onclick="liquidar(${s.id})" style="flex:1; background:var(--green); color:white; border:none; border-radius:10px; font-weight:700;">Saldar</button>
+                        </div>` : ''}
+                </div>`;
+            }
+        });
+
+        data.gasts.forEach(g => {
+            let eq = g.c==='VES' ? g.p : (g.c==='USD' ? g.p*tu : g.p*te);
+            tg += eq;
+            lG.innerHTML += `<div class="item-card" style="border-left-color:#5856d6">
+                <button style="position:absolute;right:10px;top:10px;border:none;background:none;color:#ccc;" onclick="borrar('g',${g.id})"><i data-lucide="trash-2" size="14"></i></button>
+                <strong>${g.d}</strong><br><small>${g.p}${g.c} ➔ ${eq.toFixed(2)} Bs</small>
+            </div>`;
+        });
+
+        document.getElementById('d-ingresos').innerText = ti.toFixed(2) + " Bs";
+        document.getElementById('d-gastos').innerText = tg.toFixed(2) + " Bs";
+        document.getElementById('d-neto').innerText = (ti-tg).toFixed(2) + " Bs";
+        lucide.createIcons();
+        mostrarHists();
+    }
+
+    function cobrarWA(nombre, monto) {
+        const msj = `Hola ${nombre}, te escribo de Manu Barber Pro para recordarte que tienes un pendiente de ${monto} Bs. ¡Gracias!`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msj)}`);
+    }
+
+    function cierreCaja() {
+        if(data.servs.length===0 && data.gasts.length===0) return;
+        abrirAlert("¿Confirmar Cierre de Caja?", () => {
+            const f = new Date(), tu = parseFloat(document.getElementById('rate-usd').value), te = parseFloat(document.getElementById('rate-eur').value);
+            let sBs = 0, gBs = 0, rows = "", wa = `💈 *REPORTE CIERRE - MANU BARBER*\n📅 ${f.toLocaleDateString()} | ⏰ ${f.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}\n💵 Tasa: $${tu} / €${te}\n--------------------------\n`;
+            let backup = {s: JSON.parse(JSON.stringify(data.servs)), g: JSON.parse(JSON.stringify(data.gasts))};
+
+            data.servs.forEach(s => {
+                let pBsC = 0, pUSD = 0;
+                s.pagos.forEach(pg => {
+                    pUSD += pg.c==='VES' ? pg.v/pg.tu : (pg.c==='EUR' ? pg.v*(pg.te/pg.tu) : pg.v);
+                    if(!pg.esc) {
+                        let eq = pg.c==='VES' ? pg.v : (pg.c==='USD' ? pg.v*tu : pg.v*te);
+                        pBsC += eq; pg.esc = true;
+                    }
+                });
+                if(pBsC > 0) {
+                    rows += `<tr><td>${s.n}</td><td style="color:var(--blue); text-align:right;">+${pBsC.toFixed(2)}</td></tr>`;
+                    sBs += pBsC; wa += `✅ ${s.n}: +${pBsC.toFixed(2)} Bs\n`;
+                }
+                let dUSD = s.mUSD - pUSD;
+                if(dUSD > 0.01) { rows += `<tr><td style="color:gray">${s.n} (DEBE)</td><td style="color:var(--red); text-align:right;">${(dUSD*tu).toFixed(2)}</td></tr>`; }
+            });
+
+            data.gasts.forEach(g => {
+                let eq = g.c==='VES' ? g.p : (g.c==='USD' ? g.p*tu : g.p*te);
+                gBs += eq; rows += `<tr><td>${g.d}</td><td style="color:var(--red); text-align:right;">-${eq.toFixed(2)}</td></tr>`;
+                wa += `💸 ${g.d}: -${eq.toFixed(2)} Bs\n`;
+            });
+
+            rows += `<tr class="total-row"><td>TOTAL COBRADO</td><td style="color:var(--green); text-align:right;">${sBs.toFixed(2)}</td></tr>`;
+            rows += `<tr><td>TOTAL GASTOS</td><td style="color:var(--red); text-align:right;">${gBs.toFixed(2)}</td></tr>`;
+            rows += `<tr><td style="font-size:1.1rem; color:var(--gold)">NETO EN CAJA</td><td style="font-size:1.1rem; color:var(--gold); text-align:right;">${(sBs-gBs).toFixed(2)} Bs</td></tr>`;
+
+            wa += `\n--------------------------\n💰 TOTAL COBRADO: ${sBs.toFixed(2)} Bs\n💸 TOTAL GASTOS: ${gBs.toFixed(2)} Bs\n💎 *NETO FINAL: ${(sBs-gBs).toFixed(2)} Bs*`;
+
+            data.hists.unshift({id:Date.now(), fecha:f.toLocaleDateString()+' '+f.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), total:sBs-gBs, html:rows, backup, wa});
+            data.servs = data.servs.filter(s => {
+                let pU = 0; s.pagos.forEach(pg => pU += pg.c==='VES' ? pg.v/pg.tu : (pg.c==='EUR' ? pg.v*(pg.te/pg.tu) : pg.v));
+                return (s.mUSD - pU) > 0.01;
+            });
+            data.gasts = [];
+            guardar();
+        });
+    }
+
+    function mostrarHists() {
+        const lH = document.getElementById('list-hist'); lH.innerHTML = '';
+        data.hists.forEach(h => {
+            lH.innerHTML += `<div class="report-box" id="rep-${h.id}">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <b style="color:var(--blue)">${h.fecha}</b>
+                    <button onclick="window.open('https://wa.me/?text=${encodeURIComponent(h.wa)}')" style="background:var(--wa); color:white; border:none; padding:6px 14px; border-radius:12px; font-weight:700; display:flex; align-items:center; gap:5px;"><i data-lucide="share" size="14"></i> WhatsApp</button>
+                </div>
+                <table class="t-resumen">${h.html}</table>
+                <div style="display:flex; gap:8px; margin-top:15px;">
+                    <button onclick="exportPDF(${h.id})" style="flex:1; background:#c43e3e; color:white; border:none; padding:10px; border-radius:10px; font-size:0.75rem;">PDF</button>
+                    <button onclick="exportEX(${h.id})" style="flex:1; background:#1d6f42; color:white; border:none; padding:10px; border-radius:10px; font-size:0.75rem;">EXCEL</button>
+                </div>
+            </div>`;
+        });
+    }
+
+    function deshacer() {
+        if(data.hists.length===0) return;
+        abrirAlert("¿Restaurar datos?", () => { const b = data.hists[0].backup; data.servs = b.s; data.gasts = b.g; data.hists.shift(); guardar(); });
+    }
+
+    function abonar(id) {
+        const s = data.servs.find(x=>x.id===id);
+        abrirAlert(`Abono: ${s.n}`, (v,c) => {
+            if(v>0) { s.pagos.push({v:parseFloat(v), c, tu:parseFloat(document.getElementById('rate-usd').value), te:parseFloat(document.getElementById('rate-eur').value), esc:false}); guardar(); }
+        }, true);
+    }
+
+    function liquidar(id) {
+        const s = data.servs.find(x=>x.id===id), tu = parseFloat(document.getElementById('rate-usd').value), te = parseFloat(document.getElementById('rate-eur').value);
+        let pU = 0; s.pagos.forEach(pg => pU += pg.c==='VES' ? pg.v/pg.tu : (pg.c==='EUR' ? pg.v*(pg.te/pg.tu) : pg.v));
+        let f = s.mUSD - pU;
+        if(f > 0.01) { s.pagos.push({v:parseFloat((f*tu/tu).toFixed(4)), c:'USD', tu, te, esc:false}); guardar(); }
+    }
+
+    function exportPDF(id) { html2pdf().from(document.getElementById('rep-'+id)).save(); }
+    function exportEX(id) { const ws = XLSX.utils.table_to_sheet(document.querySelector(`#rep-${id} table`)); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Cierre"); XLSX.writeFile(wb, `Cierre_${id}.xlsx`); }
+    function borrar(t,id) { abrirAlert("¿Eliminar?", () => { if(t==='s') data.servs=data.servs.filter(x=>x.id!==id); else data.gasts=data.gasts.filter(x=>x.id!==id); guardar(); }); }
+    
+    function abrirAlert(m, ok, inp=false) {
+        document.getElementById('alert-txt').innerText = m;
+        document.getElementById('alert-inp-wrap').style.display = inp?'block':'none';
+        document.getElementById('custom-alert').style.display = 'flex';
+        document.getElementById('alert-ok').onclick = () => { ok(document.getElementById('alert-v').value, document.getElementById('alert-c').value); cerrarAlert(); };
+    }
+    function cerrarAlert() { document.getElementById('custom-alert').style.display = 'none'; }
+    window.onload = () => { lucide.createIcons(); };
+</script>
+</body>
+</html>
