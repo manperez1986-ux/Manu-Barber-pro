@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Manu Barber Pro - v69</title>
+    <title>Manu Barber Pro - v70</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1465/1465133.png">
+    <link rel="manifest" href="manifest.json">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -69,7 +70,7 @@
     <h2 style="margin:0 0 20px 0;">Manu Barber Pro</h2>
     <input type="password" id="pass" placeholder="Clave Maestra" style="background:#f2f2f7; padding:18px; border-radius:15px; width:100%; text-align:center; margin-bottom:15px; border:none; font-size:1.2rem;">
     <button class="btn-blue" onclick="validar()">ENTRAR</button>
-    <button onclick="window.open('https://wa.me/584247824402?text=Clave%20Remota')" style="margin-top:25px; border:none; background:none; color:var(--blue); font-weight:700;">SOLICITAR ACCESO REMOTO</button>
+    <button onclick="window.open('https://wa.me/584247824404?text=Clave%20Remota')" style="margin-top:25px; border:none; background:none; color:var(--blue); font-weight:700;">SOLICITAR ACCESO REMOTO</button>
 </div>
 
 <div id="custom-alert">
@@ -155,16 +156,16 @@
 <script>
     const KEY = "MANU2026";
     let data = {
-        servs: JSON.parse(localStorage.getItem('m69_s')) || [],
-        gasts: JSON.parse(localStorage.getItem('m69_g')) || [],
-        hists: JSON.parse(localStorage.getItem('m69_h')) || [],
+        servs: JSON.parse(localStorage.getItem('m70_s')) || [],
+        gasts: JSON.parse(localStorage.getItem('m70_g')) || [],
+        hists: JSON.parse(localStorage.getItem('m70_h')) || [],
         filtro: 'pend'
     };
 
     function guardar() {
-        localStorage.setItem('m69_s', JSON.stringify(data.servs));
-        localStorage.setItem('m69_g', JSON.stringify(data.gasts));
-        localStorage.setItem('m69_h', JSON.stringify(data.hists));
+        localStorage.setItem('m70_s', JSON.stringify(data.servs));
+        localStorage.setItem('m70_g', JSON.stringify(data.gasts));
+        localStorage.setItem('m70_h', JSON.stringify(data.hists));
         actualizarTodo();
     }
 
@@ -304,7 +305,7 @@
                     sBs += pBsC; wa += `✅ ${s.n}: +${pBsC.toFixed(2)} Bs\n`;
                 }
                 let dUSD = s.mUSD - pUSD;
-                if(dUSD > 0.01) { rows += `<tr><td style="color:gray">${s.n} (DEBE)</td><td style="color:var(--red); text-align:right;">${(dUSD*tu).toFixed(2)}</td></tr>`; }
+                if(dUSD > 0.01) { rows += `<tr><td style="color:gray">${s.n} (DEUDA)</td><td style="color:var(--red); text-align:right;">${(dUSD*tu).toFixed(2)}</td></tr>`; }
             });
 
             data.gasts.forEach(g => {
@@ -376,6 +377,12 @@
         document.getElementById('alert-ok').onclick = () => { ok(document.getElementById('alert-v').value, document.getElementById('alert-c').value); cerrarAlert(); };
     }
     function cerrarAlert() { document.getElementById('custom-alert').style.display = 'none'; }
+    
+    // REGISTRO DEL SERVICE WORKER (PARA INSTALAR EN ANDROID)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(() => console.log("Service Worker Registrado"));
+    }
+
     window.onload = () => { lucide.createIcons(); };
 </script>
 </body>
