@@ -1,4 +1,4 @@
-const CACHE_NAME = 'manu-barber-v69';
+const CACHE_NAME = 'manu-barber-v70';
 const ASSETS = [
   'index.html',
   'manifest.json',
@@ -7,31 +7,10 @@ const ASSETS = [
   'https://unpkg.com/lucide@latest'
 ];
 
-// Instalación y cacheo de archivos
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
+  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
 });
 
-// Estrategia: Carga desde Cache, luego actualiza
 self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((res) => {
-      return res || fetch(e.request);
-    })
-  );
-});
-
-// Eliminar caches viejos
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    })
-  );
+  e.respondWith(caches.match(e.request).then((res) => res || fetch(e.request)));
 });
